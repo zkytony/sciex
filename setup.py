@@ -9,6 +9,7 @@ setup(name='sciex',
       description='Framework for "scientific" experiments (Result organization; Experiment and Trial setup; Baseline Comparisons)',
       python_requires='>3.6',
       install_requires=[
+          'pyyaml',
           'numpy',
           'matplotlib',
           'networkx',

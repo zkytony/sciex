@@ -2,8 +2,12 @@ from datetime import datetime as dt
 import concurrent.futures
 import traceback
 import os
+import shutil 
 import yaml
+import pickle
 import sciex.util as util
+
+ABS_PATH = os.path.dirname(os.path.abspath(__file__))
 
 class Event:
     NORMAL = "Normal"
@@ -11,10 +15,10 @@ class Event:
     ERROR = "Error"
     SUCCESS = "Success"
 
-    def __init__(self, description, kind="Normal", time=dt.now()):
+    def __init__(self, description, kind="Normal"):
         self._description = description
         self._kind = kind
-        self._time = time
+        self._time = dt.now()
 
     def __str__(self):
         return "%s Event (%s): %s" % (str(self._time), self._kind, self._description)
@@ -26,11 +30,16 @@ class Event:
 class Experiment:
     """One experiment simply groups a set of trials together.
     Runs them together, manages results etc."""
-    def __init__(self, name, trials, logging=True, verbose=False, outdir="results"):
+    def __init__(self, name, trials, outdir,
+                 logging=True, verbose=False):
         """
         outdir: The root directory to organize all experiment results.
         """
-        self.name = name
+        if not os.path.isabs(outdir):
+            raise ValueError("outdir must be absolute path")
+        start_time = dt.now()
+        start_time_str = start_time.strftime("%Y%m%d%H%M%S%f")[:-3]
+        self.name = "%s_%s" % (name, start_time_str)
         self.trials = trials
         self._outdir = outdir
         self._logging = logging
@@ -38,73 +47,65 @@ class Experiment:
         for t in trials:
             t.verbose = verbose
 
-    def begin(self, parallel=False, max_workers=61):
-        results = []
-        start_time = dt.now()
-        start_time_str = start_time.strftime("%Y%m%d%H%M%S%f")[:-3]
-        try:
-            if not parallel:
-                for trial in self.trials:
-                    trial_results = trial.run(logging=self._logging)
-                    results.append((trial.name, trial_results, trial.log, trial.config))
-            else:
-                # Can at most run max_workers number of trials in parallel.
-                # So have to split up trial running in batches.
-                last_n = 0
-                for n in range(1, len(self.trials), max_workers):
-                    with concurrent.futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
-                        results = executor.map(self._run_single, list(self.trials[last_n:n]))
-                    last_n = n
-        except Exception as ex:
-            print("ERROR: Experiment fialed to complete due to Exception")
-            traceback.print_exc()
-            raise ex
-        finally:
-            exp_name = "%s_%s" % (self.name, start_time_str)
-            for trial_name, trial_results, log, config in results:
-                trial_path = os.path.join(self._outdir, exp_name, trial_name)
-                if not os.path.exists(trial_path):
-                    os.makedirs(trial_path)
-                self._trial_paths[trial_path] = set({})
+    def generate_trial_scripts(self, split=4):
+        """Generate shell scripts to run trials"""
+        # Dump the pickle files
+        for trial in self.trials:
+            trial_path = os.path.join(self._outdir, self.name, trial.name)
+            if not os.path.exists(trial_path):
+                os.makedirs(trial_path)
+            with open(os.path.join(trial_path, "trial.pkl"), "wb") as f:
+                pickle.dump(trial, f)
 
-                config_path = os.path.join(trial_path, "config.yaml")
-                print("Saving configuration for trial %s at %s..." % (trial_name, config_path))
-                with open(config_path, "w") as f:
-                    yaml.dump(config, f)
+        # copy runner script
+        shutil.copyfile(os.path.join(ABS_PATH, "trial_runner.py"),
+                        os.path.join(self._outdir, self.name, "trial_runner.py"))
+                
+        # Generate shell scripts
+        batchsize = len(self.trials) // split
+        for i in range(split):
+            begin = i*batchsize
+            end = (i+1)*batchsize
+            if i == split-1 and end < len(self.trials):
+                end = len(self.trials)
+            print("Generating script for trials [%d-%d]" % (begin+1, end))
+            shellscript_path = os.path.join(self._outdir, self.name, "run_%d.sh" % i)
+            with open(os.open(shellscript_path, os.O_CREAT | os.O_WRONLY, 0o777), "w") as f:
+                for trial in self.trials[begin:end]:
+                    f.write("python trial_runner.py \"%s\" \"%s\" --logging\n"
+                            % (os.path.join(self._outdir, self.name, trial.name, "trial.pkl"),
+                               os.path.join(self._outdir, self.name)))
 
-                print("Saving results for trial %s..." % (trial_name))
-                for result in trial_results:
-                    result_path = os.path.join(trial_path, result.filename)
-                    result.save(result_path)
-                    self._trial_paths[trial_path].add((type(result), result_path))
-                    
-                if self._logging:
-                    log_path = os.path.join(trial_path, "log.txt")
-                    with open(log_path, "w") as f:
-                        print("| Saving events to %s..." % (log_path))
-                        for event in log:
-                            f.write(str(event) + "\n")
-            # also save the result file paths
-            with open(os.path.join(self._outdir, exp_name, "paths.yaml"), "w") as f:
-                yaml.dump(self._trial_paths, f)
+        # Copy gather results script
+        shutil.copyfile(os.path.join(ABS_PATH, "gather_results.py"),
+                        os.path.join(self._outdir, self.name, "gather_results.py"))
+            
 
-
-    def _run_single(self, trial):
-        trial_results = trial.run(logging=self._logging)
-        return trial.name, trial_results, trial.log, trial.config
-
-    def collect_results(self):
-        results = {}
-        for trial_path in self._trial_paths:
-            results[trial_path] = []
-            for result_type, result_path in self._trial_paths[trial_path]:
-                result = result_type.collect(result_path)
-                results[trial_path].append(result)
-        return results
-
-    
 class Trial:
     def __init__(self, name, config, verbose=False):
+        """
+        Trial name convention: "{trial-global-name}_{seed}_{specific-setting-name}"
+
+        Example: gridworld4x4_153_value-iteration-200.
+
+        The ``seed'' is optional. If not provided, then there should be only one underscore.
+        """
+        # Verify name format
+        if len(name.split("_")) != 2 or len(name.split("_")) != 3:
+            raise ValueError("Name format incorrect (Check underscores)")
+        elif len(name.split("_")) == 3:
+            global_name, seed, specific_name = name.split("_")
+            try:
+                int(seed)
+            except ValueError:
+                raise ValueError("seed _%s_ is not an integer" % seed)
+            self.global_name = global_name
+            self.seed = seed
+            self.specific_name = specific_name
+        elif len(name.split("_")) == 2:
+            self.global_name, self.specific_name = name.split("_")
+            self.seed = None
+        
         self.name = name
         self._config = config
         self._log = []
@@ -128,18 +129,49 @@ class Trial:
     def log(self):
         return self._log
 
-    
+    @classmethod
+    def gather_results(cls, results):
+        """Given a dictionary produced by `gather_results.py`
+        of the format result_type -> {global_name -> {specific_name -> {seed -> actual_result}}},
+        return a gathered result of each result type"""
+        gathered_results = {}
+        for result_type in results:
+            gathered_results[result_type] = {}
+            for global_name in results[result_type]:
+                gr = result_type.gather(results[result_type][global_name])
+                if gr is None:
+                    continue
+                gathered_results[result_type][global_name] = gr
+        return gathered_results
+        
+            
 class Result:
-    @property
-    def filename(self):
-        return self._filename
-
     @classmethod
     def collect(cls, path):
         raise NotImplemented
 
+    @classmethod
+    def FILENAME(cls):
+        """Should be overridden"""
+        raise NotImplemented
+
     def save(self, path):
         """Save result to given path to file"""
-        raise NotImplemented    
+        raise NotImplemented
 
+    @property
+    def filename(self):
+        return type(self).FILENAME()
 
+    @classmethod
+    def gather(cls, results):
+        """`results` is a mapping from specific_name to a dictionary {seed: actual_result}.
+        Returns a more understandable interpretation of these results"""
+        return None
+
+    @classmethod
+    def save_gathered_results(cls, results, path):
+        """results is a mapping from global_name to the object returned by `gather()`.
+        Post-processing of results should happen here.
+        Return "None" if nothing to be saved."""
+        return None
