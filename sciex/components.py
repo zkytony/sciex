@@ -91,7 +91,7 @@ class Trial:
         The ``seed'' is optional. If not provided, then there should be only one underscore.
         """
         # Verify name format
-        if len(name.split("_")) != 2 or len(name.split("_")) != 3:
+        if len(name.split("_")) != 2 and len(name.split("_")) != 3:
             raise ValueError("Name format incorrect (Check underscores)")
         elif len(name.split("_")) == 3:
             global_name, seed, specific_name = name.split("_")
