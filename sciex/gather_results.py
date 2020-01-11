@@ -45,14 +45,23 @@ def main():
             if specific_name not in results[result_type][global_name]:
                 results[result_type][global_name][specific_name] = {}
 
-            result_file = result_type.FILENAME()
+            # result may depend on multiple files
+            result_files = result_type.FILENAMES()
             # get the file of this result time
-            if os.path.exists(os.path.join(root, result_file)):
-                result = result_type.collect(os.path.join(root, result_file))
+            all_present = True
+            for rf in result_files:
+                if not os.path.exists(os.path.join(root, rf)):
+                    print("Warning: %s result file %s not found in %s" % (str(result_type), rf, os.path.join(root)))
+                    all_present = False; break
+            # All result files are present
+            if all_present:
+                if len(result_files) == 1:
+                    result = result_type.collect(os.path.join(root, result_files[0]))
+                else:
+                    result = result_type.collect([os.path.join(root, rf) for rf in result_files])
                 results[result_type][global_name][specific_name][seed] = result
-            else:
-                print("Warning: %s result file %s not found in %s" % (str(result_type), result_file, os.path.join(root)))
         print("Collected results in %s" % trial_name)
+        
 
     gathered_results = Trial.gather_results(results)
     for result_type in gathered_results:

@@ -148,12 +148,19 @@ class Trial:
 class Result:
     @classmethod
     def collect(cls, path):
+        """path can be a str of a list of paths"""
         raise NotImplemented
 
     @classmethod
     def FILENAME(cls):
-        """Should be overridden"""
+        """If this result depends on only one file,
+        put the filename here"""
         raise NotImplemented
+
+    @classmethod
+    def FILENAMES(cls):
+        """Returns a list of filenames the result depends on"""
+        return [cls.FILENAME()]
 
     def save(self, path):
         """Save result to given path to file"""
