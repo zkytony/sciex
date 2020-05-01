@@ -16,7 +16,7 @@ class Experiment:
 ```
    
 A `Trial` can be initialized by a `name` and a `config`. There is no requirement on the format of `config`; It just needs to be able to be serialized by pickle. Note that we recommend a convention of giving trial names:
-```
+```python
 class Trial:
     def __init__(self, name, config, verbose=False):
         """
@@ -89,7 +89,7 @@ class Result:
     ...
 ```
 Basically, you define how to save this kind of result (`save()`), how to collect it, i.e. read it from a file (`collect()`), how to gather a set of results of this kind (`gather()`), for example, computing mean and standard deviation. As an example, `sciex` provides a `YamlResult` type (see `result_types.py`):
-```
+```python
 import yaml
 import pickle
 from sciex.components import Result
@@ -105,7 +105,7 @@ class YamlResult(Result):
             return yaml.load(f)
 ```
 We didn't define the `gather()` and `save_gathered_results()` functions because these are experiment-specific. For example, in a reinforcement learning experiment, I may want to gather rewards as a type of result. Here's how I may implement that. Notice that since I know I will put these results in a paper, my implementation of `save_gathered_results` will be saving a LaTex table in a `.tex` file.
-```
+```python
 class RewardsResult(YamlResult):
     def __init__(self, rewards):
         """rewards: a list of reward floats"""
@@ -154,7 +154,7 @@ class RewardsResult(YamlResult):
 ```
 Then, after all the results are produced, when you want to gather the results and produce some report of the statistics (or plots), just run
 
-```python
+```
 $ ./{Experiment:outdir}/{Experiment:name}_{timestamp}/gather_results.py
 ```
 
