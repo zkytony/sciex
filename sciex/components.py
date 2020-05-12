@@ -47,11 +47,20 @@ class Experiment:
         for t in trials:
             t.verbose = verbose
 
-    def generate_trial_scripts(self, split=4):
-        """Generate shell scripts to run trials"""
+    def generate_trial_scripts(self, prefix="run", split=4):
+        Experiment.GENERATE_TRIAL_SCRIPTS(os.path.join(self._outdir, self.name),
+                                          self._trials, prefix=prefix, split=split)
+
+    @classmethod
+    def GENERATE_TRIAL_SCRIPTS(cls, exp_path,
+                               trials, prefix="run", split=4):
+        """Generate shell scripts to run trials."""
         # Dump the pickle files
-        for trial in self.trials:
-            trial_path = os.path.join(self._outdir, self.name, trial.name)
+        for trial in trials:
+            trial_path = os.path.join(exp_path, trial.name)
+            if os.path.exists(os.path.join(trial_path, "trial.pkl")):
+                print("trial.pkl for %s already exists" % (trial.name))
+                continue
             if not os.path.exists(trial_path):
                 os.makedirs(trial_path)
             with open(os.path.join(trial_path, "trial.pkl"), "wb") as f:
@@ -59,26 +68,26 @@ class Experiment:
 
         # copy runner script
         shutil.copyfile(os.path.join(ABS_PATH, "trial_runner.py"),
-                        os.path.join(self._outdir, self.name, "trial_runner.py"))
+                        os.path.join(exp_path, "trial_runner.py"))
                 
         # Generate shell scripts
-        batchsize = len(self.trials) // split
+        batchsize = len(trials) // split
         for i in range(split):
             begin = i*batchsize
             end = (i+1)*batchsize
-            if i == split-1 and end < len(self.trials):
-                end = len(self.trials)
+            if i == split-1 and end < len(trials):
+                end = len(trials)
             print("Generating script for trials [%d-%d]" % (begin+1, end))
-            shellscript_path = os.path.join(self._outdir, self.name, "run_%d.sh" % i)
+            shellscript_path = os.path.join(exp_path, "%s_%d.sh" % (prefix, i))
             with open(os.open(shellscript_path, os.O_CREAT | os.O_WRONLY, 0o777), "w") as f:
-                for trial in self.trials[begin:end]:
+                for trial in trials[begin:end]:
                     f.write("python trial_runner.py \"%s\" \"%s\" --logging\n"
-                            % (os.path.join(self._outdir, self.name, trial.name, "trial.pkl"),
-                               os.path.join(self._outdir, self.name)))
+                            % (os.path.join(exp_path, trial.name, "trial.pkl"),
+                               os.path.join(exp_path)))
 
         # Copy gather results script
         shutil.copyfile(os.path.join(ABS_PATH, "gather_results.py"),
-                        os.path.join(self._outdir, self.name, "gather_results.py"))
+                        os.path.join(exp_path, "gather_results.py"))
             
 
 class Trial:
@@ -92,7 +101,7 @@ class Trial:
         """
         # Verify name format
         if len(name.split("_")) != 2 and len(name.split("_")) != 3:
-            raise ValueError("Name format incorrect (Check underscores)")
+            raise ValueError("Name format\n  \"%s\"\nincorrect (Check underscores)" % name)
         elif len(name.split("_")) == 3:
             global_name, seed, specific_name = name.split("_")
             try:
