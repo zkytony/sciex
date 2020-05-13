@@ -49,7 +49,7 @@ class Experiment:
 
     def generate_trial_scripts(self, prefix="run", split=4):
         Experiment.GENERATE_TRIAL_SCRIPTS(os.path.join(self._outdir, self.name),
-                                          self._trials, prefix=prefix, split=split)
+                                          self.trials, prefix=prefix, split=split)
 
     @classmethod
     def GENERATE_TRIAL_SCRIPTS(cls, exp_path,

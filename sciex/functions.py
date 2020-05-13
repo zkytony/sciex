@@ -20,6 +20,8 @@ def add_baseline(baseline_name,
             to run each split.
         baseline_name (str): Name of the baseline
     """
+    if not os.path.isabs(path_to_experiment):
+        raise ValueError("Path to experiment must be absolute path.")
 
     combinations = set({})
     new_trials = []
