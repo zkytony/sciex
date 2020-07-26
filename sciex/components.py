@@ -31,15 +31,18 @@ class Experiment:
     """One experiment simply groups a set of trials together.
     Runs them together, manages results etc."""
     def __init__(self, name, trials, outdir,
-                 logging=True, verbose=False):
+                 logging=True, verbose=False, add_timestamp=True):
         """
         outdir: The root directory to organize all experiment results.
         """
         if not os.path.isabs(outdir):
             raise ValueError("outdir must be absolute path")
-        start_time = dt.now()
-        start_time_str = start_time.strftime("%Y%m%d%H%M%S%f")[:-3]
-        self.name = "%s_%s" % (name, start_time_str)
+        if add_timestamp:
+            start_time = dt.now()
+            start_time_str = start_time.strftime("%Y%m%d%H%M%S%f")[:-3]
+            self.name = "%s_%s" % (name, start_time_str)
+        else:
+            self.name = name
         self.trials = trials
         self._outdir = outdir
         self._logging = logging
@@ -53,12 +56,13 @@ class Experiment:
 
     @classmethod
     def GENERATE_TRIAL_SCRIPTS(cls, exp_path,
-                               trials, prefix="run", split=4):
+                               trials, prefix="run", split=4, exist_ok=False):
         """Generate shell scripts to run trials."""
         # Dump the pickle files
         for trial in trials:
             trial_path = os.path.join(exp_path, trial.name)
-            if os.path.exists(os.path.join(trial_path, "trial.pkl")):
+            trial.trial_path = trial_path
+            if not exist_ok and os.path.exists(os.path.join(trial_path, "trial.pkl")):
                 print("trial.pkl for %s already exists" % (trial.name))
                 continue
             if not os.path.exists(trial_path):
@@ -119,6 +123,10 @@ class Trial:
         self._config = config
         self._log = []
         self.verbose = verbose
+        # The path to the directory where the results of this trial should be saved.
+        # This is usually set by the Experiment when it is generating scripts to
+        # run the trials.
+        self.trial_path = None        
 
     @property
     def config(self):
