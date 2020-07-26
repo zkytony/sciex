@@ -50,9 +50,10 @@ class Experiment:
         for t in trials:
             t.verbose = verbose
 
-    def generate_trial_scripts(self, prefix="run", split=4):
+    def generate_trial_scripts(self, prefix="run", split=4, exist_ok=False):
         Experiment.GENERATE_TRIAL_SCRIPTS(os.path.join(self._outdir, self.name),
-                                          self.trials, prefix=prefix, split=split)
+                                          self.trials, prefix=prefix, split=split,
+                                          exist_ok=exist_ok)
 
     @classmethod
     def GENERATE_TRIAL_SCRIPTS(cls, exp_path,
