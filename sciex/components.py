@@ -35,8 +35,6 @@ class Experiment:
         """
         outdir: The root directory to organize all experiment results.
         """
-        if not os.path.isabs(outdir):
-            raise ValueError("outdir must be absolute path")
         if add_timestamp:
             start_time = dt.now()
             start_time_str = start_time.strftime("%Y%m%d%H%M%S%f")[:-3]
@@ -86,9 +84,13 @@ class Experiment:
             shellscript_path = os.path.join(exp_path, "%s_%d.sh" % (prefix, i))
             with open(os.open(shellscript_path, os.O_CREAT | os.O_WRONLY, 0o777), "w") as f:
                 for trial in trials[begin:end]:
+                    if os.path.isabs(exp_path):
+                        dirpath = exp_path
+                    else:
+                        dirpath = "./"
                     f.write("python trial_runner.py \"%s\" \"%s\" --logging\n"
-                            % (os.path.join(exp_path, trial.name, "trial.pkl"),
-                               os.path.join(exp_path)))
+                            % (os.path.join(dirpath, trial.name, "trial.pkl"),
+                               os.path.join(dirpath)))
 
         # Copy gather results script
         shutil.copyfile(os.path.join(ABS_PATH, "gather_results.py"),
