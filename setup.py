@@ -11,9 +11,6 @@ setup(name='sciex',
       install_requires=[
           'pyyaml',
           'numpy',
-          'matplotlib',
-          'networkx',
-          'pygraphviz'
       ],
       author='Kaiyu Zheng',
       author_email='kaiyutony@gmail.com'
