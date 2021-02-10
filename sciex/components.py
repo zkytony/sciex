@@ -2,7 +2,7 @@ from datetime import datetime as dt
 import concurrent.futures
 import traceback
 import os
-import shutil 
+import shutil
 import yaml
 import pickle
 import sciex.util as util
@@ -25,7 +25,7 @@ class Event:
 
     def __repr__(self):
         return str(self)
-    
+
 
 class Experiment:
     """One experiment simply groups a set of trials together.
@@ -72,7 +72,7 @@ class Experiment:
         # copy runner script
         shutil.copyfile(os.path.join(ABS_PATH, "trial_runner.py"),
                         os.path.join(exp_path, "trial_runner.py"))
-                
+
         # Generate shell scripts
         batchsize = len(trials) // split
         for i in range(split):
@@ -95,7 +95,7 @@ class Experiment:
         # Copy gather results script
         shutil.copyfile(os.path.join(ABS_PATH, "gather_results.py"),
                         os.path.join(exp_path, "gather_results.py"))
-            
+
 
 class Trial:
     def __init__(self, name, config, verbose=False):
@@ -121,7 +121,7 @@ class Trial:
         elif len(name.split("_")) == 2:
             self.global_name, self.specific_name = name.split("_")
             self.seed = None
-        
+
         self.name = name
         self._config = config
         self._log = []
@@ -129,7 +129,7 @@ class Trial:
         # The path to the directory where the results of this trial should be saved.
         # This is usually set by the Experiment when it is generating scripts to
         # run the trials.
-        self.trial_path = None        
+        self.trial_path = None
 
     @property
     def config(self):
@@ -163,8 +163,8 @@ class Trial:
                     continue
                 gathered_results[result_type][global_name] = gr
         return gathered_results
-        
-            
+
+
 class Result:
     @classmethod
     def collect(cls, path):
