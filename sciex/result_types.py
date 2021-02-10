@@ -31,7 +31,7 @@ class PostProcessingResult(Result):
     @classmethod
     def FILENAMES(cls):
         raise NotImplemented
-    
+
     @classmethod
     def collect(cls, path):
         raise NotImplemented
