@@ -105,6 +105,10 @@ class Experiment:
         shutil.copyfile(os.path.join(ABS_PATH, "gather_results.py"),
                         os.path.join(exp_path, "gather_results.py"))
 
+        # Copy check status script
+        shutil.copyfile(os.path.join(ABS_PATH, "check_status.py"),
+                        os.path.join(exp_path, "check_status.py"))
+
 
 class Trial:
     def __init__(self, name, config, verbose=False):
