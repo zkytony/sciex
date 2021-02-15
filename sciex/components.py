@@ -5,6 +5,7 @@ import os
 import shutil
 import yaml
 import pickle
+import math
 import sciex.util as util
 
 ABS_PATH = os.path.dirname(os.path.abspath(__file__))
@@ -48,14 +49,14 @@ class Experiment:
         for t in trials:
             t.verbose = verbose
 
-    def generate_trial_scripts(self, prefix="run", split=4, exist_ok=False):
+    def generate_trial_scripts(self, prefix="run", split=4, exist_ok=False, evenly=True):
         Experiment.GENERATE_TRIAL_SCRIPTS(os.path.join(self._outdir, self.name),
                                           self.trials, prefix=prefix, split=split,
-                                          exist_ok=exist_ok)
+                                          exist_ok=exist_ok, evenly=evenly)
 
     @classmethod
     def GENERATE_TRIAL_SCRIPTS(cls, exp_path,
-                               trials, prefix="run", split=4, exist_ok=False):
+                               trials, prefix="run", split=4, exist_ok=False, evenly=True):
         """Generate shell scripts to run trials."""
         # Dump the pickle files
         for trial in trials:
@@ -74,13 +75,23 @@ class Experiment:
                         os.path.join(exp_path, "trial_runner.py"))
 
         # Generate shell scripts
-        batchsize = len(trials) // split
+        if evenly:
+            print("Will split trials EVENLY with probably fewer total splits.")
+            batchsize = int(math.ceil((len(trials) / split)))
+        else:
+            print("Will split trials EXACTLY with given total splits"\
+                  "but the last split may contain more trials.")
+            batchsize = len(trials) // split
+
         for i in range(split):
             begin = i*batchsize
+            if begin >= len(trials):
+                break
             end = (i+1)*batchsize
-            if i == split-1 and end < len(trials):
+            if i == split - 1 and end < len(trials):
                 end = len(trials)
-            print("Generating script for trials [%d-%d]" % (begin+1, end))
+
+            print("Generating script for trials [%d-%d] (split=%d)" % (begin+1, end, i))
             shellscript_path = os.path.join(exp_path, "%s_%d.sh" % (prefix, i))
             with open(os.open(shellscript_path, os.O_CREAT | os.O_WRONLY, 0o777), "w") as f:
                 for trial in trials[begin:end]:
