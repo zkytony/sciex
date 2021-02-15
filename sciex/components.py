@@ -87,9 +87,7 @@ class Experiment:
             begin = i*batchsize
             if begin >= len(trials):
                 break
-            end = (i+1)*batchsize
-            if i == split - 1 and end < len(trials):
-                end = len(trials)
+            end = min((i+1)*batchsize, len(trials))
 
             print("Generating script for trials [%d-%d] (split=%d)" % (begin+1, end, i))
             shellscript_path = os.path.join(exp_path, "%s_%d.sh" % (prefix, i))
