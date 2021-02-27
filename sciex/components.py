@@ -63,7 +63,7 @@ class Experiment:
             trial_path = os.path.join(exp_path, trial.name)
             trial.trial_path = trial_path
             if not exist_ok and os.path.exists(os.path.join(trial_path, "trial.pkl")):
-                print("trial.pkl for %s already exists" % (trial.name))
+                print("sciex: trial.pkl for %s already exists" % (trial.name))
                 continue
             if not os.path.exists(trial_path):
                 os.makedirs(trial_path)

@@ -8,12 +8,20 @@ def main():
     parser.add_argument("pickle_file", type=str,
                         help="Path to trial pickle file")
     parser.add_argument("exp_path", type=str,
-                        help="Path to experiment root")    
+                        help="Path to experiment root")
     parser.add_argument("--logging", action="store_true")
     args = parser.parse_args()
 
+    if not os.path.exists(args.pickle_file):
+        print("{} not found".format(args.pickle_file))
+        return
+
     with open(args.pickle_file, "rb") as f:
         trial = pickle.load(f)
+
+    if os.path.exists(os.path.join(args.exp_path, trial.name, "config.yaml")):
+        print("Skipping {} because it seems to be done".format(trial.name))
+        return
 
     # run trial
     results = trial.run(logging=args.logging)

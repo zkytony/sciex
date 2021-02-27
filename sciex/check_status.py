@@ -1,6 +1,7 @@
 import pickle
 import os
 import yaml
+from datetime import datetime as dt
 
 EXPERIMENT_PATH = os.path.dirname(os.path.abspath(__file__))
 
@@ -33,7 +34,8 @@ def main():
             status["finished"] += 1
         status["total"] += 1
 
-    print("Experiment Status:")
+    time_str = dt.now().strftime("%m/%d/%Y %H:%M:%S")
+    print("Experiment Status (%s):" % time_str)
     print("     Total: {}".format(status["total"]))
     print("  Finished: {} ({:.1%})".format(status["finished"],
                                            status["finished"]/status["total"]))
