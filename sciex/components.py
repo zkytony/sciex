@@ -58,6 +58,7 @@ class Experiment:
     def GENERATE_TRIAL_SCRIPTS(cls, exp_path,
                                trials, prefix="run", split=4, exist_ok=False, evenly=True):
         """Generate shell scripts to run trials."""
+        os.makedirs(exp_path, exist_ok=exist_ok)
         # Dump the pickle files
         for trial in trials:
             trial_path = os.path.join(exp_path, trial.name)
