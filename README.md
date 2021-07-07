@@ -3,6 +3,11 @@ Framework for "scientific" experiments (Result organization; Experiment and Tria
 
 This tool helps strip out the repetitive parts of setting up and running experiments, and lets you focus on writing the logic of trial running and result types. This reduces the stupid errors one may make when running experiments, and makes results organized and gathering statistics convenient.
 
+## Setup
+```
+pip install sciex
+```
+
 ## How it works
 
 #### An Experiment consists of trials
@@ -14,7 +19,7 @@ class Experiment:
     def __init__(self, name, trials, outdir,
                  logging=True, verbose=False):
 ```
-   
+
 A `Trial` can be initialized by a `name` and a `config`. There is no requirement on the format of `config`; It just needs to be able to be serialized by pickle. Note that we recommend a convention of giving trial names:
 ```python
 class Trial:
@@ -25,9 +30,9 @@ class Trial:
         Example: gridworld4x4_153_value-iteration-200.
 
         The ``seed'' is optional. If not provided, then there should be only one underscore.
-        """    
+        """
 ```
-**Your job** is to define a child class of `Trial`, implementing its function `run()`, so that it catersx to your experiment design. 
+**Your job** is to define a child class of `Trial`, implementing its function `run()`, so that it catersx to your experiment design.
 
 #### Parallel trial running
 We want to save time and run trials in parallel, if possible. Thus, instead of directly executing the trials, `Experiment` first saves the trials as `pickle` files in **an organized manner**, then generates __shell scripts__, each bundles a subset of all the trials. The shell script contains commands using `trial_runner.py` to conduct trials. More specifically, the **organized manner** means, the pickle files will be saved under, along with `trial_runner.py`, the shell scripts and `gather_results.py`.
@@ -42,7 +47,7 @@ We want to save time and run trials in parallel, if possible. Thus, instead of d
 ```
 Inside the shell script `run_{i}` where `i` is the index of the bundle, you will only find commands of the sort:
 ```
-python trial_runner.py {path/to/trial/trial.pkl} {path/to/trial} --logging 
+python trial_runner.py {path/to/trial/trial.pkl} {path/to/trial} --logging
 ```
 Thus, you just need to do
 ```
@@ -157,4 +162,3 @@ Then, after all the results are produced, when you want to gather the results an
 ```
 $ ./{Experiment:outdir}/{Experiment:name}_{timestamp}/gather_results.py
 ```
-
