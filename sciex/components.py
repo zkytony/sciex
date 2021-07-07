@@ -6,6 +6,7 @@ import shutil
 import yaml
 import pickle
 import math
+from pprint import pprint
 import sciex.util as util
 
 ABS_PATH = os.path.dirname(os.path.abspath(__file__))
@@ -112,6 +113,11 @@ class Experiment:
 
 
 class Trial:
+
+    # Set this to be a list of strings or tuples (as key-chain in dictionary)
+    # used in verifying config.
+    REQUIRED_CONFIGS = []
+
     def __init__(self, name, config, verbose=False):
         """
         Trial name convention: "{trial-global-name}_{seed}_{specific-setting-name}"
@@ -136,6 +142,12 @@ class Trial:
             self.global_name, self.specific_name = name.split("_")
             self.seed = None
 
+        errors = self._verify_config(config)
+        if len(errors) > 0:
+            print("Errors:")
+            pprint(errors)
+            raise ValueError("Invalid configuration.")
+
         self.name = name
         self._config = config
         self._log = []
@@ -150,7 +162,7 @@ class Trial:
         return self._config
 
     def run(self, logging=False):
-        """Returns a Result object"""
+        """Returns a list of Result objects"""
         raise NotImplemented
 
     def log_event(self, event):
@@ -178,6 +190,27 @@ class Trial:
                 gathered_results[result_type][global_name] = gr
         return gathered_results
 
+    def _verify_config(self, config):
+        """
+        Returns:
+            A list of error messages in string
+        """
+        errors = []
+        for entry in self.__class__.REQUIRED_CONFIGS:
+            if type(entry) == str:
+                if entry not in config:
+                    errors.append("Missing configuration for '{}'".format(entry))
+            elif type(entry) == tuple:
+                if entry[0] not in config:
+                    errors.append("Missing configuration for '{}'".format(entry))
+                dct = config[entry[0]]
+                key_chain = [entry[0]]
+                for key in entry[1:]:
+                    key_chain.append(key)
+                    if key not in dct:
+                        errors.append("Missing configuration for '{}'".format(",".join(key_chain)))
+                    dct = dct[key]
+        return errors
 
 class Result:
     @classmethod
