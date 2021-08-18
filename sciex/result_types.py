@@ -12,7 +12,7 @@ class YamlResult(Result):
     @classmethod
     def collect(cls, path):
         with open(path) as f:
-            return yaml.load(f)
+            return yaml.load(f, Loader=yaml.Loader)
 
 class PklResult(Result):
     def __init__(self, things):
