@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(name='sciex',
       packages=['sciex'],
-      version='0.1',
+      version='0.2',
       description='Framework for "scientific" experiments (Result organization; Experiment and Trial setup; Baseline Comparisons)',
       python_requires='>3.6',
       install_requires=[
