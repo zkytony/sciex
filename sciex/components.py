@@ -32,10 +32,11 @@ class Event:
 class Experiment:
     """One experiment simply groups a set of trials together.
     Runs them together, manages results etc."""
-    def __init__(self, name, trials, outdir,
+    def __init__(self, name, trials, outdir, groups=None,
                  logging=True, verbose=False, add_timestamp=True):
         """
         outdir: The root directory to organize all experiment results.
+        groups: maps from group_name to a list of trial names in that group
         """
         if add_timestamp:
             start_time = dt.now()
@@ -44,11 +45,38 @@ class Experiment:
         else:
             self.name = name
         self.trials = trials
+        self._name_to_trial = {trial.name : trial for trial in self.trials}
+        self._groups = {}
+        if groups is not None:
+            self._groups = groups
         self._outdir = outdir
         self._logging = logging
         self._trial_paths = {}  # map from trial path to set{(result_type, result_filename)...}
         for t in trials:
             t.verbose = verbose
+
+    def add_group(self, group_name, trial_names, extend=True):
+        if group_name not in self._groups:
+            self._groups[group_name] = trial_names
+        else:
+            if extend:
+                self._groups[group_name].extend(trial_names)
+            else:
+                raise ValueError("group {} already exists.".format(group_name))
+
+    def generate_trial_scripts_by_groups(self, prefix="run", exist_ok=False, split=1, evenly=True):
+        # For each group, generate run scripts for trials in that group.
+        # The split is within-group split.
+        exp_path = os.path.join(self._outdir, self.name)
+        if not exist_ok and os.path.exists(exp_path):
+            raise ValueError("Experiment already exists at", exp_path)
+        for group_name in self._groups:
+            names = self._groups[group_name]
+            trials_in_group = [self._name_to_trial[name]
+                               for name in names]
+            Experiment.GENERATE_TRIAL_SCRIPTS(exp_path,
+                                              trials_in_group, prefix="{}_{}".format(prefix, group_name),
+                                              exist_ok=True, split=split, evenly=evenly)
 
     def generate_trial_scripts(self, prefix="run", split=4, exist_ok=False, evenly=True):
         Experiment.GENERATE_TRIAL_SCRIPTS(os.path.join(self._outdir, self.name),
