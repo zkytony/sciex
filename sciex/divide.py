@@ -41,14 +41,16 @@ def main():
     ratios = [args.ratios[i] / ratio_sum for i in range(len(args.ratios))]
     _by_computers = {}
     begin = 0
-    end = -1
+    end = 0
     for i in range(len(args.computers)):
         computer = args.computers[i]
         ratio = ratios[i]
-        if end < begin:
-            end += begin + int(math.ceil(ratio*len(run_scripts)))
+        if end <= begin:
+            end += int(math.ceil(ratio*len(run_scripts)))
             end = min(len(run_scripts), end)
+        print("{} will take {}:{}".format(computer, begin, end))
         _by_computers[computer] = run_scripts[begin:end]
+        begin = end
 
     # Then, divide the computer run scripts by num_parallel, evenly
     _by_terminals = {computer: []
