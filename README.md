@@ -55,16 +55,25 @@ $ ./run_{i}.sh
 ```
 on a terminal to execute the trials covered by this shell script. You can open multiple terminals and run all shell scripts together in parallel.
 
-##### New feature
-Run multiple trials with shared resource. The trials are contained
+##### New
+**Divide run scripts by computer.** This is useful
+for the case where you have generated a lot of running
+scripts (each runs multiple trials) and you want to
+add another level of grouping.
+```
+python -m sciex.divide ./ -c sunny windy rainy cloudy -r 0.3 0.2 0.3 0.2 -n 4 3 4 3
+```
+where `./` is the path to the experiment root directly (here I am just there)
+
+
+**Run multiple trials with shared resource.** The trials are contained
 in a run script, or a file with a list of paths to trial pickle files.
 The trial is expected to implement `provide_shared_resource` and
 `could_provide_resource` and the resource should only be read, and not written to
-by the trials.
+by the trials. (NOTE this doesn't actually work with cuda models because of difficulty sharing CUDA memory)
 ```
 python -m sciex.batch_runner run_script_or_file_with_trial_paths {Experiment:outdir}
 ```
-
 
 #### Result types
 
