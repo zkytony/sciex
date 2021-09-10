@@ -63,7 +63,10 @@ add another level of grouping.
 ```
 python -m sciex.divide ./ -c sunny windy rainy cloudy -r 0.3 0.2 0.3 0.2 -n 4 3 4 3
 ```
-where `./` is the path to the experiment root directly (here I am just there)
+where `./` is the path to the experiment root directly (here I am just there),
+`sunny windy rainy cloudy` are four computers, and I want to run 30% run scripts
+on `sunny`, 20% on `windy`, and so on. On each computer I will start e.g. `4` terminals
+for `sunny` and `3` for `windy`, etc.
 
 
 **Run multiple trials with shared resource.** The trials are contained
