@@ -184,6 +184,8 @@ class Trial:
         # This is usually set by the Experiment when it is generating scripts to
         # run the trials.
         self.trial_path = None
+        # Shared resource for running in batch
+        self._resource = None
 
     @property
     def config(self):
@@ -202,6 +204,34 @@ class Trial:
     @property
     def log(self):
         return self._log
+
+    def provide_shared_resource(self):
+        """Returns an object to be shared as resource
+        when multiple such trials are running in parallel
+        in a batch"""
+        raise NotImplementedError
+
+    def could_provide_resource(self):
+        """Returns True if this trial could be used to
+        provide a shared resourec"""
+        raise NotImplementedError
+
+    @property
+    def resource(self):
+        if hasattr(self, "_resource"):
+            return self._resource
+        else:
+            # backwards compatibility
+            return None
+
+    @property
+    def shared_resource(self):
+        """alias for resource"""
+        return self.resource
+
+    def set_resource(self, resource):
+        """Sets a potentially shared resource"""
+        self._resource = resource
 
     @classmethod
     def gather_results(cls, results):

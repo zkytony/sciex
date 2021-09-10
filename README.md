@@ -55,6 +55,16 @@ $ ./run_{i}.sh
 ```
 on a terminal to execute the trials covered by this shell script. You can open multiple terminals and run all shell scripts together in parallel.
 
+##### New feature
+Run multiple trials with shared resource. The trials are contained
+in a run script, or a file with a list of paths to trial pickle files.
+The trial is expected to implement `provide_shared_resource` and
+`could_provide_resource` and the resource should only be read, and not written to
+by the trials.
+```
+python -m sciex.batch_runner run_script_or_file_with_trial_paths {Experiment:outdir}
+```
+
 
 #### Result types
 
