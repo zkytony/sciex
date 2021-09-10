@@ -60,7 +60,7 @@ def main():
         num_terminals = args.num_terminals[i]
         for j in range(num_terminals):
             batchsize = int(math.ceil(len(scripts) / num_terminals))
-            begin = i*batchsize
+            begin = j*batchsize
             if begin >= len(scripts):
                 break
             end = min((j+1)*batchsize, len(scripts))
