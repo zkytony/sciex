@@ -4,8 +4,8 @@ Filter trials.
 import pickle
 import argparse
 import os
+import sys
 from sciex.components import Trial, Experiment
-import shutil
 
 ABS_PATH = os.path.dirname(os.path.abspath(__file__))
 
@@ -25,13 +25,14 @@ def filter_empty(args):
                 with open(os.path.join(fullpath, "trial.pkl"), "rb") as f:
                     trial = pickle.load(f)
                 trials_to_copy.append(trial)
-                print("{} is not completed. Will include.".format(trial.name))
+                sys.stdout.write("{} is not completed. Will include.\n".format(trial.name))
+                sys.stdout.flush()
 
     # Generate a new experiment based on these trials
     exp = Experiment(args.output_exp_name,
                      trials_to_copy,
                      args.output_path)
-    exp.generate_trial_scripts(split=args.num_splits,
+    exp.generate_trial_scripts(split=int(args.num_splits),
                                exist_ok=True,
                                evenly=True)
 
