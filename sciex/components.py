@@ -146,6 +146,12 @@ class Trial:
     # used in verifying config.
     REQUIRED_CONFIGS = []
 
+    @staticmethod
+    def verify_name(name):
+        if len(name.split("_")) != 2 and len(name.split("_")) != 3:
+            return False
+        return True
+
     def __init__(self, name, config, verbose=False):
         """
         Trial name convention: "{trial-global-name}_{seed}_{specific-setting-name}"
@@ -155,7 +161,7 @@ class Trial:
         The ``seed'' is optional. If not provided, then there should be only one underscore.
         """
         # Verify name format
-        if len(name.split("_")) != 2 and len(name.split("_")) != 3:
+        if not Trial.verify_name(name):
             raise ValueError("Name format\n  \"%s\"\nincorrect (Check underscores)" % name)
         elif len(name.split("_")) == 3:
             global_name, seed, specific_name = name.split("_")
