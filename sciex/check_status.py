@@ -28,6 +28,15 @@ from datetime import datetime as dt
 
 EXPERIMENT_PATH = os.path.dirname(os.path.abspath(__file__))
 
+def trial_completed(trial_path):
+    if os.path.exists(os.path.join(trial_path, "config.yaml")):
+        # The trial has completed, because the config file is saved,
+        # and at least there is one other file in the directory
+        if len(os.listdir(trial_path)) > 2:
+            return True
+    return False
+
+
 def load_trial_names_in_run_script(runscript_path):
     results = []
     with open(runscript_path) as f:
@@ -95,11 +104,8 @@ def main():
             print("Skipping trial %s due to invalid trial name format" % (trial_name))
             continue
 
-        if os.path.exists(os.path.join(EXPERIMENT_PATH, trial_name, "config.yaml")):
-            # The trial has completed, because the config file is saved,
-            # and at least there is one other file in the directory
-            if len(os.listdir(os.path.join(EXPERIMENT_PATH, trial_name))) > 2:
-                status["finished"] += 1
+        if trial_completed(os.path.join(EXPERIMENT_PATH, trial_name)):
+            status["finished"] += 1
         status["total"] += 1
 
     time_str = dt.now().strftime("%m/%d/%Y %H:%M:%S")
