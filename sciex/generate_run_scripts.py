@@ -1,14 +1,15 @@
 # Generate scripts to run all experiment trials
+import sys
 import sciex
 import os
 import pickle
 
-SPLIT = 4
 exp_path = "./"
 
 def main():
     # load trials
     trials = []
+    split = int(sys.argv[1])
     for trial_name in os.listdir(exp_path):
         if not os.path.isdir(os.path.join(exp_path, trial_name)):
             continue
@@ -22,7 +23,7 @@ def main():
                                             trials,
                                             prefix="run",
                                             exist_ok=True,
-                                            split=SPLIT)
+                                            split=split)
 
 if __name__ == "__main__":
     main()

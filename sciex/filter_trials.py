@@ -6,6 +6,7 @@ import argparse
 import os
 import sys
 from sciex.components import Trial, Experiment
+from sciex.check_status import trial_completed
 
 ABS_PATH = os.path.dirname(os.path.abspath(__file__))
 
@@ -19,7 +20,7 @@ def filter_empty(args):
 
         trial_name = os.path.basename(fname)
         if Trial.verify_name(trial_name):
-            if os.path.exists(os.path.join(fullpath, "config.yaml")):
+            if trial_completed(fullpath):
                 continue
             else:
                 with open(os.path.join(fullpath, "trial.pkl"), "rb") as f:
