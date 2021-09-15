@@ -96,8 +96,10 @@ def main():
             continue
 
         if os.path.exists(os.path.join(EXPERIMENT_PATH, trial_name, "config.yaml")):
-            # The trial has completed, because the config file is saved.
-            status["finished"] += 1
+            # The trial has completed, because the config file is saved,
+            # and at least there is one other file in the directory
+            if len(os.listdir(os.path.join(EXPERIMENT_PATH, trial_name))) > 2:
+                status["finished"] += 1
         status["total"] += 1
 
     time_str = dt.now().strftime("%m/%d/%Y %H:%M:%S")
