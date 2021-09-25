@@ -2,6 +2,7 @@ import argparse
 import pickle
 import os
 import yaml
+from sciex.check_status import trial_completed
 
 def main():
     parser = argparse.ArgumentParser(description='Run a trial.')
@@ -19,7 +20,7 @@ def main():
     with open(args.pickle_file, "rb") as f:
         trial = pickle.load(f)
 
-    if os.path.exists(os.path.join(args.exp_path, trial.name, "config.yaml")):
+    if trial_completed(os.path.join(args.exp_path, trial.name)):
         print("Skipping {} because it seems to be done".format(trial.name))
         return
 
