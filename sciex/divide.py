@@ -69,7 +69,7 @@ def main():
             shellscript_path = os.path.join(args.exp_path,
                                             "group_{}_{}.sh".format(computer, j))
             with open(os.open(shellscript_path, os.O_CREAT | os.O_WRONLY, 0o777), "w") as f:
-                for script in scripts:
+                for script in scripts[begin:end]:
                     f.write("source {}\n".format(script))
 
 if __name__ == "__main__":
