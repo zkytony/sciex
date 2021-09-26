@@ -44,6 +44,7 @@ def load_trial_names_in_run_script(runscript_path):
     for line in lines:
         line = line.strip()
         if "python trial_runner.py" in line:
+            line = line[line.index("python trial_runner.py"):]
             trial_path = line.split()[2]
             if trial_path.startswith("\""):
                 trial_path = trial_path[1:-1]
