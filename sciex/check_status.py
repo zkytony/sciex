@@ -70,7 +70,7 @@ def main():
     if args.prefix is not None:
         for fname in os.listdir(EXPERIMENT_PATH):
             if not os.path.isdir(os.path.join(EXPERIMENT_PATH, fname)):
-                if fname.startswith(args.prefix):
+                if fname.startswith(args.prefix) and fname.endswith("sh"):
                     filepath = os.path.join(EXPERIMENT_PATH, fname)
                     trials_to_check.extend(load_trial_names_in_run_script(filepath))
     else:
