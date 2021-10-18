@@ -64,7 +64,7 @@ class Experiment:
             else:
                 raise ValueError("group {} already exists.".format(group_name))
 
-    def generate_trial_scripts_by_groups(self, prefix="run", exist_ok=False, split=1, evenly=True):
+    def generate_trial_scripts_by_groups(self, prefix="run", exist_ok=False, split=1, evenly=True, timeout=None):
         # For each group, generate run scripts for trials in that group.
         # The split is within-group split.
         exp_path = os.path.join(self._outdir, self.name)
@@ -76,16 +76,16 @@ class Experiment:
                                for name in names]
             Experiment.GENERATE_TRIAL_SCRIPTS(exp_path,
                                               trials_in_group, prefix="{}_{}".format(prefix, group_name),
-                                              exist_ok=True, split=split, evenly=evenly)
+                                              exist_ok=True, split=split, evenly=evenly, timeout=timeout)
 
-    def generate_trial_scripts(self, prefix="run", split=4, exist_ok=False, evenly=True):
+    def generate_trial_scripts(self, prefix="run", split=4, exist_ok=False, evenly=True, timeout=None):
         Experiment.GENERATE_TRIAL_SCRIPTS(os.path.join(self._outdir, self.name),
                                           self.trials, prefix=prefix, split=split,
-                                          exist_ok=exist_ok, evenly=evenly)
+                                          exist_ok=exist_ok, evenly=evenly, timeout=timeout)
 
     @classmethod
     def GENERATE_TRIAL_SCRIPTS(cls, exp_path,
-                               trials, prefix="run", split=4, exist_ok=False, evenly=True):
+                               trials, prefix="run", split=4, exist_ok=False, evenly=True, timeout=None):
         """Generate shell scripts to run trials."""
         os.makedirs(exp_path, exist_ok=exist_ok)
         # Dump the pickle files
@@ -127,8 +127,12 @@ class Experiment:
                         dirpath = exp_path
                     else:
                         dirpath = "./"
-                    f.write("python trial_runner.py \"%s\" \"%s\" --logging\n"
-                            % (os.path.join(dirpath, trial.name, "trial.pkl"),
+                    cmd_prefix = ""
+                    if timeout is not None:
+                        cmd_prefix += "timeout %s " % timeout
+                    f.write("%spython trial_runner.py \"%s\" \"%s\" --logging\n"
+                            % (cmd_prefix,
+                               os.path.join(dirpath, trial.name, "trial.pkl"),
                                os.path.join(dirpath)))
 
         # Copy gather results script
