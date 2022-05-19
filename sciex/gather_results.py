@@ -1,3 +1,7 @@
+# Copyright 2022 Kaiyu Zheng
+# 
+# Usage of this file is licensed under the MIT License.
+
 # Go through every trial directory, unpickle the trial.pkl,
 # then based on RESULT TYPES, collect the results for each
 # trial. Organize them by trial name.

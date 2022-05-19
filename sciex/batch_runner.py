@@ -1,3 +1,7 @@
+# Copyright 2022 Kaiyu Zheng
+# 
+# Usage of this file is licensed under the MIT License.
+
 """
 batch_runner: Instead of running individual trials (on different terminals,
 if using run scripts), runs a batch of trials with shared resource, and

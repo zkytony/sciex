@@ -1,3 +1,7 @@
+# Copyright 2022 Kaiyu Zheng
+# 
+# Usage of this file is licensed under the MIT License.
+
 """
 Divide running scripts by computers. This is useful
 for the case where you have generated a lot of running
